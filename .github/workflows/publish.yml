@@ -50,4 +50,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUBLISHED_VERSION: ${{ steps.ver.outputs.version }}
         run: |
-          ./gradlew --no-daemon publish publishPlugins -PgitHubPackages=true -Pversion=${PUBLISHED_VERSION}
+          ./gradlew --no-daemon publish -PgitHubPackages=true -Pversion=${PUBLISHED_VERSION}
