@@ -4,21 +4,8 @@ plugins {
     id("com.gradle.plugin-publish") version "1.3.1"
 }
 
-gradlePlugin {
-    plugins {
-        create("projectBootstrap") {
-            id = "com.jetbrains.morj.gradle.project-bootstrap"
-            implementationClass = "com.jetbrains.morj.ProjectBootstrapPlugin"
-        }
-    }
-}
-
-group = "com.jetbrains.morj.gradle"
+group = "com.jetbrains.morj"
 version = providers.gradleProperty("version").getOrElse("0.0.1-SNAPSHOT")
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation(gradleApi())
@@ -39,4 +26,17 @@ publishing {
             mavenLocal()
         }
     }
+}
+
+gradlePlugin {
+    plugins {
+        create("projectBootstrap") {
+            id = "com.jetbrains.morj.gradle.project-bootstrap"
+            implementationClass = "com.jetbrains.morj.ProjectBootstrapPlugin"
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
 }
