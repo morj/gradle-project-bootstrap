@@ -1,0 +1,133 @@
+@file:Suppress("unused")
+
+package io.github.morj
+
+import org.gradle.api.Project
+import org.gradle.api.initialization.Settings
+import java.net.URI
+import java.util.*
+
+/**
+ * Configures a Space Maven repository with authentication in pluginManagement repositories
+ *
+ * @param proj The Space project name
+ * @param repo The repository name within the project
+ */
+fun Settings.spaceRepository(proj: String, repo: String) {
+    pluginManagement.repositories.maven {
+        name = "$proj-$repo"
+        url = URI("https://packages.jetbrains.team/maven/p/$proj/$repo")
+        credentials {
+            username = resolveProperty("spaceUsername", "SPACE_USERNAME")
+            password = resolveProperty("spacePassword", "SPACE_PASSWORD")
+        }
+    }
+}
+
+/**
+ * Resolves a property from multiple sources in order of priority:
+ * 1. Gradle property
+ * 2. Local properties file (gradle.local.properties)
+ * 3. System property
+ * 4. Environment variable (with provided name)
+ * 5. Environment variable (with an alternative name if provided)
+ *
+ * @param name The property name to resolve
+ * @param alternativeEnvName Alternative environment variable name to check
+ * @return The resolved property value
+ * @throws IllegalStateException if the property cannot be resolved
+ */
+fun Settings.resolveProperty(name: String, alternativeEnvName: String? = null): String =
+    resolvePropertyOrNull(name, alternativeEnvName)
+        ?: error("Failed to resolve gradle property $name")
+
+/**
+ * Resolves a property from multiple sources in order of priority, returning null if not found
+ * 1. Gradle property
+ * 2. Local properties file (gradle.local.properties)
+ * 3. System property
+ * 4. Environment variable (with provided name)
+ * 5. Environment variable (with an alternative name if provided)
+ *
+ * @param name The property name to resolve
+ * @param alternativeEnvName Alternative environment variable name to check
+ * @return The resolved property value or null if not found
+ */
+fun Settings.resolvePropertyOrNull(name: String, alternativeEnvName: String? = null): String? =
+    providers.gradleProperty(name).orNull
+        ?: localProperties(this).getProperty(name)
+        ?: System.getProperty(name)
+        ?: System.getenv(name)
+        ?: alternativeEnvName?.let { System.getenv(alternativeEnvName) }
+
+/**
+ * Configures a Space Maven repository with authentication in pluginManagement repositories
+ *
+ * @param proj The Space project name
+ * @param repo The repository name within the project
+ */
+fun Project.spaceRepository(proj: String, repo: String) {
+    repositories.maven {
+        name = "$proj-$repo"
+        url = URI("https://packages.jetbrains.team/maven/p/$proj/$repo")
+        credentials {
+            username = resolveProperty("spaceUsername", "SPACE_USERNAME")
+            password = resolveProperty("spacePassword", "SPACE_PASSWORD")
+        }
+    }
+}
+
+/**
+ * Resolves a property from multiple sources in order of priority:
+ * 1. Gradle property
+ * 2. Local properties file (gradle.local.properties)
+ * 3. System property
+ * 4. Environment variable (with provided name)
+ * 5. Environment variable (with an alternative name if provided)
+ *
+ * @param name The property name to resolve
+ * @param alternativeEnvName Alternative environment variable name to check
+ * @return The resolved property value
+ * @throws IllegalStateException if the property cannot be resolved
+ */
+fun Project.resolveProperty(name: String, alternativeEnvName: String? = null): String =
+    resolvePropertyOrNull(name, alternativeEnvName)
+        ?: error("Failed to resolve gradle property $name")
+
+/**
+ * Resolves a property from multiple sources in order of priority, returning null if not found
+ * 1. Gradle property
+ * 2. Local properties file (gradle.local.properties)
+ * 3. System property
+ * 4. Environment variable (with provided name)
+ * 5. Environment variable (with an alternative name if provided)
+ *
+ * @param name The property name to resolve
+ * @param alternativeEnvName Alternative environment variable name to check
+ * @return The resolved property value or null if not found
+ */
+fun Project.resolvePropertyOrNull(name: String, alternativeEnvName: String? = null): String? =
+    providers.gradleProperty(name).orNull
+        ?: localProperties(this).getProperty(name)
+        ?: System.getProperty(name)
+        ?: System.getenv(name)
+        ?: alternativeEnvName?.let { System.getenv(alternativeEnvName) }
+
+// TODO: review this 'global caching' approach, it doesn't seem really idiomatic
+private var localProperties: Properties? = null
+
+private fun localProperties(container: Any): Properties {
+    if (localProperties == null) {
+        localProperties = Properties().also { props ->
+            val dir = when (container) {
+                is Settings -> container.rootDir
+                is Project -> container.rootDir
+                else -> error("Unsupported container type: ${container::class.java}")
+            }
+            dir.resolve("gradle.local.properties").takeIf { it.exists() }?.let {
+                it.inputStream().use { props.apply { load(it) } }
+            }
+        }
+    }
+    return localProperties!!
+}
