@@ -26,26 +26,22 @@ dependencies {
 
 publishing {
     repositories {
-        if (project.hasProperty("gitHubPackages")) {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/jetbrains/jcp-gradle-project-bootstrap")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
-            }
-        } else {
+        if (!project.hasProperty("ci")) {
             mavenLocal()
         }
     }
 }
 
 gradlePlugin {
+    website = "https://github.com/morj/gradle-project-bootstrap"
+    vcsUrl = "https://github.com/morj/gradle-project-bootstrap.git"
     plugins {
         create("projectBootstrap") {
             id = "io.github.morj.gradle.project-bootstrap"
             implementationClass = "io.github.morj.ProjectBootstrapPlugin"
+            displayName = "Project Bootstrap Plugin"
+            description = "A Gradle plugin for bootstrapping new projects with common configurations and structure"
+            tags = listOf("bootstrap", "project-setup", "kotlin", "java")
         }
     }
 }
